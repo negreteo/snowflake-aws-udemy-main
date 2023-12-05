@@ -1,10 +1,10 @@
 use role sysadmin;
 use database ecommerce_db;
  
-create  or replace schema streams_test;
+create or replace schema streams_test;
 
 --- Create a raw table to test the streams  ---
--- Data coming from S3 to Staging
+-- Data coming from S3 to Staging (before ingested into PRD)
 CREATE OR REPLACE TABLE members_raw (
   id number(8) NOT NULL,
   name varchar(255) default NULL,
@@ -19,14 +19,14 @@ CREATE OR REPLACE TABLE members_prod (
 );
 
 
---- Create a standard (delta) stream on the raw table :members_raw---
+--- Create a standard (delta) stream on the raw table :members_raw to track changes---
 -- By default a stream is created as standard, if type is not set
 CREATE OR REPLACE STREAM members_std_stream ON TABLE members_raw;
 
 --- Check the streams ---- 
 select * from members_std_stream;
 
---- Check the stream offset ---- 
+--- Check the offset of the stream ---- 
 SELECT SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream') as members_table_st_offset;
 
 SELECT to_timestamp(SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream')) as members_table_st_offset;
