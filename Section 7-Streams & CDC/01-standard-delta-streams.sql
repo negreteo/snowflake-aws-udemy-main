@@ -4,7 +4,7 @@ use database ecommerce_db;
 create or replace schema streams_test;
 
 --- Create a raw table to test the streams  ---
--- Data coming from S3 to Staging (before ingested into PRD)
+-- Data coming from S3 to Staging
 CREATE OR REPLACE TABLE members_raw (
   id number(8) NOT NULL,
   name varchar(255) default NULL,
@@ -19,14 +19,14 @@ CREATE OR REPLACE TABLE members_prod (
 );
 
 
---- Create a standard (delta) stream on the raw table :members_raw to track changes---
+--- Create a standard (delta) stream on the raw table :members_raw---
 -- By default a stream is created as standard, if type is not set
 CREATE OR REPLACE STREAM members_std_stream ON TABLE members_raw;
 
 --- Check the streams ---- 
 select * from members_std_stream;
 
---- Check the offset of the stream ---- 
+--- Check the stream offset ---- 
 SELECT SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream') as members_table_st_offset;
 
 SELECT to_timestamp(SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream')) as members_table_st_offset;
@@ -67,7 +67,11 @@ select * from members_std_stream;
 ---
 
 --- Insert some more data into the raw table ---
-INSERT INTO members_raw (id,name,fee) VALUES (6,'sid',0),(7,'Billy',0),(8,'Katie',0);
+INSERT INTO members_raw (id,name,fee) 
+VALUES 
+(6,'sid',0),
+(7,'Billy',0),
+(8,'Katie',0);
 
 --- Check the streams -----
 select * from members_std_stream;
@@ -75,11 +79,14 @@ select * from members_std_stream;
 --- Update the raw table ----
 update members_raw set fee=10 where id=7;
 
---- Check the streams -----
+--- Check the streams to see the update applied to the raw table -----
+-- The data has not been consumed yet, that is why UPDATE value is FALSE
 select * from members_std_stream;
 
 --- Consume the streams ---
-INSERT INTO members_prod(id,name,fee) SELECT id, name, fee FROM members_std_stream WHERE METADATA$ACTION = 'INSERT';
+INSERT INTO members_prod(id,name,fee) 
+SELECT id, name, fee FROM members_std_stream 
+WHERE METADATA$ACTION = 'INSERT';
 
 --- Check the production table -----
 select * from members_prod;
@@ -88,6 +95,7 @@ select * from members_prod;
 update members_raw set fee=20 where id=7;
 
 --- Check the streams -----
+-- Shows the old consumed value (10) as DELETE, and the new one (20) as INSERT
 select * from members_std_stream;
 
 --- Consume both (inserts and updates) from the streams --- 
@@ -97,5 +105,8 @@ on mp.id = mstr.id
 when matched then update set mp.fee = mstr.fee, mp.name = mstr.name
 when not matched then insert (id,name,fee) values (mstr.id, mstr.name, cast(mstr.fee as numeric));
 
---- Check the streams -----
+--- Check the production table for the UPDATED FEE value -----
+select * from members_prod;
+
+--- Check the streams (should be EMPTY) -----
 select * from members_std_stream;
