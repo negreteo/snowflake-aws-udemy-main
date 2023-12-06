@@ -24,12 +24,11 @@ CREATE OR REPLACE TABLE members_games_prod (
   fee number(3) NULL
 );
 
-
 --- Create a standard (delta) stream on the raw table :members_raw---
 CREATE OR REPLACE STREAM members_std_stream ON TABLE members_raw;
 
 --- Check the streams ---- 
-select * from members_std_stream
+select * from members_std_stream;
 
 --- Check the stream offset ---- 
 SELECT SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream') as members_table_st_offset;
@@ -37,7 +36,6 @@ SELECT SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream') as members_table_
 SELECT to_timestamp(SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream')) as members_table_st_offset;
 
 --- Insert some data into the raw table : members_raw --- 
-
 INSERT INTO members_raw (id,name,fee,member_type)
 VALUES
 (1,'Joe',0,'games'),
@@ -48,7 +46,7 @@ VALUES
 
 
 --- Check the streams ---- 
-select * from members_std_stream
+select * from members_std_stream;
 
 --- Check the stream offset ---- 
 SELECT SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream') as members_table_st_offset;
@@ -57,15 +55,13 @@ SELECT SYSTEM$STREAM_GET_TABLE_TIMESTAMP('members_std_stream') as members_table_
 SELECT id, name, fee FROM members_std_stream WHERE METADATA$ACTION = 'INSERT';
 
 --- Beging the transaction & consume the streams data  ---- 
-
-begin ;
+begin;
 
 insert into members_games_prod
 SELECT id, name, fee FROM members_std_stream WHERE METADATA$ACTION = 'INSERT' and member_type='games';
 
 insert into members_music_prod
 SELECT id, name, fee FROM members_std_stream WHERE METADATA$ACTION = 'INSERT' and member_type='music';
-
 
 commit;
 
