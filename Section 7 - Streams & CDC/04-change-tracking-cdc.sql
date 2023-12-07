@@ -12,6 +12,7 @@ CREATE OR REPLACE TABLE members_raw (
 --- Enable change tracking ---- 
 ALTER TABLE members_raw SET CHANGE_TRACKING = TRUE;
 
+-- create a time stamp variable for travel change tracking
 SET ts1 = (SELECT CURRENT_TIMESTAMP());
 
 INSERT INTO members_raw (id,name,fee,member_type)
@@ -24,6 +25,7 @@ update members_raw set fee=20 where id=3;
 
 SELECT * FROM members_raw CHANGES(INFORMATION => default) at(TIMESTAMP =>$ts1);
 
+-- create a second time stamp variable for travel change tracking
 SET ts2 = (SELECT CURRENT_TIMESTAMP());
 
 INSERT INTO members_raw (id,name,fee,member_type)
