@@ -4,8 +4,8 @@ CREATE or REPLACE STORAGE INTEGRATION aws_sf_data
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = S3
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = '{your_iam_arn}'
-  STORAGE_ALLOWED_LOCATIONS = ('{your_bucket_name}');
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::965642570530:role/iamr-on-dev-gbl-snowflake-aws-001'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://s3-on-dev-ecn1-snowflake-001');
 
 grant usage on integration aws_sf_data to role sysadmin;
 
@@ -17,19 +17,21 @@ use role sysadmin;
 
 use schema "ECOMMERCE_DB"."ECOMMERCE_DEV";
 
+-- Get the STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID and update the AWS IAM Role Policy
 desc INTEGRATION aws_sf_data;
 
 CREATE OR REPLACE FILE FORMAT json_load_format TYPE = 'JSON' ;
 
 create or replace stage stg_lineitem_json_dev
 storage_integration = aws_sf_data
-url = '{your_bucket_name}/streams_dev/'
+url = 's3://s3-on-dev-ecn1-snowflake-001/streams_dev/'
 file_format = json_load_format;
 
 list @stg_lineitem_json_dev;
 
 create or replace table lineitem_raw_json (src variant );
 
+-- Create delta stream to track inserts and updates
 CREATE OR REPLACE STREAM lineitem_std_stream ON TABLE lineitem_raw_json;
 
 
