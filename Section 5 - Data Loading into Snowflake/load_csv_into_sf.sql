@@ -27,9 +27,9 @@ storage_integration = aws_sf_data
 url = 's3://s3-on-dev-ecn1-snowflake-001/ecommerce_dev/lineitem/lineitem_csv/'
 file_format = csv_load_format;
 
-list @stg_lineitem_csv_dev;
+LIST @stg_lineitem_csv_dev;
 
-copy into lineitem from @stg_lineitem_csv_dev ON_ERROR = ABORT_STATEMENT;
+COPY INTO lineitem FROM @stg_lineitem_csv_dev ON_ERROR = ABORT_STATEMENT;
 
 
 -- Validate the data----
