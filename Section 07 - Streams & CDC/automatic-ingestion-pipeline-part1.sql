@@ -1,4 +1,9 @@
-use role accountadmin;
+-- use role accountadmin;
+
+USE ROLE IAM_SFLK_D_BI
+USE WAREHOUSE WH_DEV
+
+use database ecommerce_db;
 
 CREATE or REPLACE STORAGE INTEGRATION aws_sf_data
   TYPE = EXTERNAL_STAGE

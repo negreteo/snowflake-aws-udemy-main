@@ -1,5 +1,14 @@
+--use role sysadmin;
+
+USE ROLE IAM_SFLK_D_BI
+USE WAREHOUSE WH_DEV
+
+use database ecommerce_db;
+
+
 create or replace task lineitem_load_tsk 
-warehouse = compute_wh
+-- warehouse = compute_wh
+warehouse = WH_DEV
 schedule = '1 minute'
 when system$stream_has_data('lineitem_std_stream')
 as 
@@ -95,8 +104,6 @@ select *
   from table(information_schema.task_history(
     scheduled_time_range_start=>dateadd('hour',-1,current_timestamp()),
     result_limit => 100));
-
-
 
 create or replace pipe lineitem_pipe auto_ingest=true as
 copy into lineitem from @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;

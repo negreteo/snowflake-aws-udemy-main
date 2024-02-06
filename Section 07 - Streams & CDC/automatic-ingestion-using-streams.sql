@@ -1,3 +1,8 @@
+USE ROLE IAM_SFLK_D_BI
+USE WAREHOUSE WH_DEV
+
+use database ecommerce_db;
+
 select 
     SRC:L_ORDERKEY as L_ORDERKEY,
     SRC:L_PARTKEY as L_PARTKEY,
@@ -99,7 +104,5 @@ values
     li_stg.L_COMMENT
 );
 
-
-
-
-grant all privileges on task lineitem_load_tsk to role sysadmin;
+-- grant all privileges on task lineitem_load_tsk to role sysadmin;
+grant all privileges on task lineitem_load_tsk to role IAM_SFLK_D_BI
