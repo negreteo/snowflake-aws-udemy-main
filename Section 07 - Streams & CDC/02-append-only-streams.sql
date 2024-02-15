@@ -1,9 +1,6 @@
-use role sysadmin;
-
--- USE ROLE IAM_SFLK_D_BI
--- USE WAREHOUSE WH_DEV
-
-use database ecommerce_db;
+USE ROLE sysadmin;
+USE WAREHOUSE COMPUTE_WH;
+USE DATABASE ecommerce_db;
  
 create or replace schema streams_test;
 

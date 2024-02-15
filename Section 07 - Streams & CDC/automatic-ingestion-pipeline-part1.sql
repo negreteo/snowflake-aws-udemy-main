@@ -1,10 +1,8 @@
--- use role accountadmin;
+USE ROLE accountadmin;
+USE WAREHOUSE COMPUTE_WH;
+USE DATABASE ecommerce_db;
 
-USE ROLE IAM_SFLK_D_BI
-USE WAREHOUSE WH_DEV
-
-use database ecommerce_db;
-
+-- Create an storage integration to store a generated identity and access management (IAM) entity for the external cloud storage.
 CREATE or REPLACE STORAGE INTEGRATION aws_sf_data
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = S3
@@ -12,66 +10,76 @@ CREATE or REPLACE STORAGE INTEGRATION aws_sf_data
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::965642570530:role/iamr-on-dev-gbl-snowflake-aws-001'
   STORAGE_ALLOWED_LOCATIONS = ('s3://s3-on-dev-ecn1-snowflake-001');
 
-grant usage on integration aws_sf_data to role sysadmin;
+-- Grant permission to the storage integration to the sysadmin role. 
+GRANT USAGE ON INTEGRATION aws_sf_data TO ROLE sysadmin;
 
-grant execute task on account to role sysadmin;
+-- Grant execute permissions to the sysadmin role.
+GRANT EXECUTE TASK ON ACCOUNT TO ROLE sysadmin;
 
-grant create stage on schema "ECOMMERCE_DB"."ECOMMERCE_DEV" to role sysadmin;
+GRANT CREATE STAGE ON SCHEMA "ECOMMERCE_DB"."ECOMMERCE_DEV" TO ROLE sysadmin;
 
-use role sysadmin;
+-- The pipeline will be created using the sysadmin role.
+USE ROLE sysadmin;
 
-use schema "ECOMMERCE_DB"."ECOMMERCE_DEV";
+USE SCHEMA "ECOMMERCE_DB"."ECOMMERCE_DEV";
 
--- Get the STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID and update the AWS IAM Role Policy
-desc INTEGRATION aws_sf_data;
+-- Get the STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID
+-- Update the AWS IAM Role Policy (Trust Relationships).
+-- STORAGE_AWS_IAM_USER_ARN: arn:aws:iam::730335278937:user/2kti0000-s
+-- STORAGE_AWS_EXTERNAL_ID: LXB17742_SFCRole=2_pqsSDVOnZuHLSVxsHfSOjKi+u/s=
+DESC INTEGRATION aws_sf_data;
 
+-- Create a file format to read a JSON file.
 CREATE OR REPLACE FILE FORMAT json_load_format TYPE = 'JSON' ;
 
-create or replace stage stg_lineitem_json_dev
-storage_integration = aws_sf_data
-url = 's3://s3-on-dev-ecn1-snowflake-001/streams_dev/'
-file_format = json_load_format;
+-- Create a stage for loading data from files into Snowflake tables and unloading data from tables into files.
+CREATE OR REPLACE STAGE stg_lineitem_json_dev
+STORAGE_INTEGRATION = aws_sf_data
+URL = 's3://s3-on-dev-ecn1-snowflake-001/streams_dev/'
+FILE_FORMAT = json_load_format;
 
-list @stg_lineitem_json_dev;
+-- Show the created stage information.
+LIST @stg_lineitem_json_dev;
 
-create or replace table lineitem_raw_json (src variant );
+-- Create a table where data will initially be stored.
+CREATE OR REPLACE TABLE lineitem_raw_json (src VARIANT);
 
--- Create delta stream to track inserts and updates
+-- Create delta stream to track inserts and updates.
 CREATE OR REPLACE STREAM lineitem_std_stream ON TABLE lineitem_raw_json;
 
-
-create or replace task lineitem_load_tsk 
-warehouse = compute_wh
-schedule = '1 minute'
-when system$stream_has_data('lineitem_std_stream')
-as 
-merge into lineitem as li 
-using 
+-- Create a recurring task that checks when the stream has data for inserts and updates.
+CREATE OR REPLACE TASK lineitem_load_tsk 
+WAREHOUSE = compute_wh
+SCHEDULE = '1 minute'
+WHEN system$stream_has_data('lineitem_std_stream')
+AS 
+MERGE INTO lineitem AS li 
+USING 
 (
-   select 
-        SRC:L_ORDERKEY as L_ORDERKEY,
-        SRC:L_PARTKEY as L_PARTKEY,
-        SRC:L_SUPPKEY as L_SUPPKEY,
-        SRC:L_LINENUMBER as L_LINENUMBER,
-        SRC:L_QUANTITY as L_QUANTITY,
-        SRC:L_EXTENDEDPRICE as L_EXTENDEDPRICE,
-        SRC:L_DISCOUNT as L_DISCOUNT,
-        SRC:L_TAX as L_TAX,
-        SRC:L_RETURNFLAG as L_RETURNFLAG,
-        SRC:L_LINESTATUS as L_LINESTATUS,
-        SRC:L_SHIPDATE as L_SHIPDATE,
-        SRC:L_COMMITDATE as L_COMMITDATE,
-        SRC:L_RECEIPTDATE as L_RECEIPTDATE,
-        SRC:L_SHIPINSTRUCT as L_SHIPINSTRUCT,
-        SRC:L_SHIPMODE as L_SHIPMODE,
-        SRC:L_COMMENT as L_COMMENT
-    from 
+   SELECT 
+        SRC:L_ORDERKEY AS L_ORDERKEY,
+        SRC:L_PARTKEY AS L_PARTKEY,
+        SRC:L_SUPPKEY AS L_SUPPKEY,
+        SRC:L_LINENUMBER AS L_LINENUMBER,
+        SRC:L_QUANTITY AS L_QUANTITY,
+        SRC:L_EXTENDEDPRICE AS L_EXTENDEDPRICE,
+        SRC:L_DISCOUNT AS L_DISCOUNT,
+        SRC:L_TAX AS L_TAX,
+        SRC:L_RETURNFLAG AS L_RETURNFLAG,
+        SRC:L_LINESTATUS AS L_LINESTATUS,
+        SRC:L_SHIPDATE AS L_SHIPDATE,
+        SRC:L_COMMITDATE AS L_COMMITDATE,
+        SRC:L_RECEIPTDATE AS L_RECEIPTDATE,
+        SRC:L_SHIPINSTRUCT AS L_SHIPINSTRUCT,
+        SRC:L_SHIPMODE AS L_SHIPMODE,
+        SRC:L_COMMENT AS L_COMMENT
+    FROM 
         lineitem_std_stream
-    where metadata$action='INSERT'
-) as li_stg
-on li.L_ORDERKEY = li_stg.L_ORDERKEY and li.L_PARTKEY = li_stg.L_PARTKEY and li.L_SUPPKEY = li_stg.L_SUPPKEY
-when matched then update 
-set 
+    WHERE metadata$action='INSERT'
+) AS li_stg
+ON li.L_ORDERKEY = li_stg.L_ORDERKEY AND li.L_PARTKEY = li_stg.L_PARTKEY AND li.L_SUPPKEY = li_stg.L_SUPPKEY
+WHEN matched THEN UPDATE 
+SET 
     li.L_PARTKEY = li_stg.L_PARTKEY,
     li.L_SUPPKEY = li_stg.L_SUPPKEY,
     li.L_LINENUMBER = li_stg.L_LINENUMBER,
@@ -87,7 +95,7 @@ set
     li.L_SHIPINSTRUCT = li_stg.L_SHIPINSTRUCT,
     li.L_SHIPMODE = li_stg.L_SHIPMODE,
     li.L_COMMENT = li_stg.L_COMMENT
-when not matched then insert 
+WHEN NOT matched THEN INSERT 
 (
     L_ORDERKEY,
     L_PARTKEY,
@@ -106,7 +114,7 @@ when not matched then insert
     L_SHIPMODE,
     L_COMMENT
 ) 
-values 
+VALUES 
 (
     li_stg.L_ORDERKEY,
     li_stg.L_PARTKEY,
@@ -126,9 +134,12 @@ values
     li_stg.L_COMMENT
 );
 
-show tasks;
+-- Show the created task information.
+-- By default the task state is SUSPENDED
+SHOW TASKS;
 
-alter task lineitem_load_tsk resume;
+-- Enable the task.
+ALTER TASK lineitem_load_tsk RESUME;
 
 copy into lineitem_raw_json from @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
 
