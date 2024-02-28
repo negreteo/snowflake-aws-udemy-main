@@ -2,39 +2,39 @@ USE ROLE accountadmin;
 USE WAREHOUSE COMPUTE_WH;
 USE DATABASE ecommerce_db;
 
-create or replace task lineitem_load_tsk 
+CREATE OR REPLACE TASK lineitem_load_tsk 
 -- warehouse = compute_wh
-warehouse = WH_DEV
-schedule = '1 minute'
-when system$stream_has_data('lineitem_std_stream')
-as 
-merge into lineitem as li 
-using 
+WAREHOUSE = WH_DEV
+SCHEDULE = '1 minute'
+WHEN system$stream_has_data('lineitem_std_stream')
+AS 
+MERGE INTO lineitem AS li 
+USING 
 (
-   select 
-        SRC:L_ORDERKEY as L_ORDERKEY,
-        SRC:L_PARTKEY as L_PARTKEY,
-        SRC:L_SUPPKEY as L_SUPPKEY,
-        SRC:L_LINENUMBER as L_LINENUMBER,
-        SRC:L_QUANTITY as L_QUANTITY,
-        SRC:L_EXTENDEDPRICE as L_EXTENDEDPRICE,
-        SRC:L_DISCOUNT as L_DISCOUNT,
-        SRC:L_TAX as L_TAX,
-        SRC:L_RETURNFLAG as L_RETURNFLAG,
-        SRC:L_LINESTATUS as L_LINESTATUS,
-        SRC:L_SHIPDATE as L_SHIPDATE,
-        SRC:L_COMMITDATE as L_COMMITDATE,
-        SRC:L_RECEIPTDATE as L_RECEIPTDATE,
-        SRC:L_SHIPINSTRUCT as L_SHIPINSTRUCT,
-        SRC:L_SHIPMODE as L_SHIPMODE,
-        SRC:L_COMMENT as L_COMMENT
-    from 
+   SELECT 
+        SRC:L_ORDERKEY AS L_ORDERKEY,
+        SRC:L_PARTKEY AS L_PARTKEY,
+        SRC:L_SUPPKEY AS L_SUPPKEY,
+        SRC:L_LINENUMBER AS L_LINENUMBER,
+        SRC:L_QUANTITY AS L_QUANTITY,
+        SRC:L_EXTENDEDPRICE AS L_EXTENDEDPRICE,
+        SRC:L_DISCOUNT AS L_DISCOUNT,
+        SRC:L_TAX AS L_TAX,
+        SRC:L_RETURNFLAG AS L_RETURNFLAG,
+        SRC:L_LINESTATUS AS L_LINESTATUS,
+        SRC:L_SHIPDATE AS L_SHIPDATE,
+        SRC:L_COMMITDATE AS L_COMMITDATE,
+        SRC:L_RECEIPTDATE AS L_RECEIPTDATE,
+        SRC:L_SHIPINSTRUCT AS L_SHIPINSTRUCT,
+        SRC:L_SHIPMODE AS L_SHIPMODE,
+        SRC:L_COMMENT AS L_COMMENT
+    FROM 
         lineitem_std_stream
-    where metadata$action='INSERT'
-) as li_stg
-on li.L_ORDERKEY = li_stg.L_ORDERKEY and li.L_PARTKEY = li_stg.L_PARTKEY and li.L_SUPPKEY = li_stg.L_SUPPKEY
-when matched then update 
-set 
+    WHERE metadata$action='INSERT'
+) AS li_stg
+ON li.L_ORDERKEY = li_stg.L_ORDERKEY AND li.L_PARTKEY = li_stg.L_PARTKEY AND li.L_SUPPKEY = li_stg.L_SUPPKEY
+WHEN MATCHED THEN UPDATE
+SET 
     li.L_PARTKEY = li_stg.L_PARTKEY,
     li.L_SUPPKEY = li_stg.L_SUPPKEY,
     li.L_LINENUMBER = li_stg.L_LINENUMBER,
@@ -50,7 +50,7 @@ set
     li.L_SHIPINSTRUCT = li_stg.L_SHIPINSTRUCT,
     li.L_SHIPMODE = li_stg.L_SHIPMODE,
     li.L_COMMENT = li_stg.L_COMMENT
-when not matched then insert 
+WHEN NOT MATCHED THEN INSERT
 (
     L_ORDERKEY,
     L_PARTKEY,
@@ -69,7 +69,7 @@ when not matched then insert
     L_SHIPMODE,
     L_COMMENT
 ) 
-values 
+VALUES 
 (
     li_stg.L_ORDERKEY,
     li_stg.L_PARTKEY,
@@ -90,18 +90,18 @@ values
 );
 
 
-show tasks;
+SHOW TASKS;
 
-alter task lineitem_load_tsk resume;
+ALTER TASK lineitem_load_tsk RESUME;
 
-copy into lineitem_raw_json from @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
+COPY INTO lineitem_raw_json FROM @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
 
-select *
-  from table(information_schema.task_history(
+SELECT *
+  FROM TABLE(information_schema.task_history(
     scheduled_time_range_start=>dateadd('hour',-1,current_timestamp()),
     result_limit => 100));
 
-create or replace pipe lineitem_pipe auto_ingest=true as
-copy into lineitem from @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
+CREATE OR REPLACE PIPE lineitem_pipe AUTO_INGEST=true AS
+COPY INTO lineitem FROM @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
 
 

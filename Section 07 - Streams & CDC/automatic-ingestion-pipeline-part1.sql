@@ -16,6 +16,7 @@ GRANT USAGE ON INTEGRATION aws_sf_data TO ROLE sysadmin;
 -- Grant execute permissions to the sysadmin role.
 GRANT EXECUTE TASK ON ACCOUNT TO ROLE sysadmin;
 
+-- Grant access to create stages for loading data in the schema.
 GRANT CREATE STAGE ON SCHEMA "ECOMMERCE_DB"."ECOMMERCE_DEV" TO ROLE sysadmin;
 
 -- The pipeline will be created using the sysadmin role.
@@ -24,13 +25,13 @@ USE ROLE sysadmin;
 USE SCHEMA "ECOMMERCE_DB"."ECOMMERCE_DEV";
 
 -- Get the STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID
--- Update the AWS IAM Role Policy (Trust Relationships).
+-- Update the AWS IAM Role Policy (Trust Relationships)
 -- STORAGE_AWS_IAM_USER_ARN: arn:aws:iam::730335278937:user/2kti0000-s
 -- STORAGE_AWS_EXTERNAL_ID: LXB17742_SFCRole=2_pqsSDVOnZuHLSVxsHfSOjKi+u/s=
 DESC INTEGRATION aws_sf_data;
 
 -- Create a file format to read a JSON file.
-CREATE OR REPLACE FILE FORMAT json_load_format TYPE = 'JSON' ;
+CREATE OR REPLACE FILE FORMAT json_load_format TYPE = 'JSON';
 
 -- Create a stage for loading data from files into Snowflake tables and unloading data from tables into files.
 CREATE OR REPLACE STAGE stg_lineitem_json_dev
@@ -138,12 +139,26 @@ VALUES
 -- By default the task state is SUSPENDED
 SHOW TASKS;
 
--- Enable the task.
+-- Change the task state to STARTED
 ALTER TASK lineitem_load_tsk RESUME;
 
-copy into lineitem_raw_json from @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
+-- Copy into the json raw table from the stage
+COPY INTO lineitem_raw_json FROM @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
 
-select *
-  from table(information_schema.task_history(
+-- Get the total of ingested records
+SELECT COUNT(1) FROM lineitem_raw_json;
+
+-- Show the STREAM captured data
+SELECT * FROM lineitem_std_stream LIMIT 10;
+
+SELECT *
+  FROM TABLE(information_schema.task_history(
     scheduled_time_range_start=>dateadd('hour',-1,current_timestamp()),
     result_limit => 100));
+
+ALTER TASK lineitem_load_tsk SUSPEND;
+
+SELECT COUNT(1) FROM ECOMMERCE_DB.ECOMMERCE_DEV.LINEITEM_RAW_JSON;
+SELECT COUNT(1) FROM ECOMMERCE_DB.ECOMMERCE_DEV.LINEITEM;
+
+TRUNCATE TABLE ECOMMERCE_DB.ECOMMERCE_DEV.LINEITEM;
