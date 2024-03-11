@@ -2,6 +2,10 @@ USE ROLE accountadmin;
 USE WAREHOUSE COMPUTE_WH;
 USE DATABASE ecommerce_db;
 
+-- With a Pipeline, you do not need to execute a manual COPY command.
+-- The pipeline will ingest AUTOMATICALLY into the stage raw table.
+-- (NOT REQUIRED ANYMORE) COPY INTO lineitem_raw_json FROM @stg_lineitem_json_dev ON_ERROR = ABORT_STATEMENT;
+
 ALTER TASK lineitem_load_tsk RESUME;
 
 -- Remove previous data ingested into Production
