@@ -1,5 +1,5 @@
 use role accountadmin;
-
+USE WAREHOUSE COMPUTE_WH;
 use schema "ECOMMERCE_DB"."ECOMMERCE_LIV";
 
 create role udf_role;

@@ -1,5 +1,5 @@
 use role sysadmin;
-
+USE WAREHOUSE COMPUTE_WH;
 use schema "ECOMMERCE_DB"."ECOMMERCE_LIV";
 
 -- Simple UDF ----
