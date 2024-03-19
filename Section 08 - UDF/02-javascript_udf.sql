@@ -1,6 +1,6 @@
-use role sysadmin;
+USE ROLE sysadmin;
 USE WAREHOUSE COMPUTE_WH;
-use schema "ECOMMERCE_DB"."ECOMMERCE_LIV";
+USE SCHEMA "ECOMMERCE_DB"."ECOMMERCE_DEV";
 
 CREATE OR REPLACE FUNCTION test_date_js(A string)
 RETURNS OBJECT
@@ -16,7 +16,7 @@ function test_js_func(x)
 return test_js_func(A); 
 $$;
   
-select test_date_js('2022-02-01');
+SELECT test_date_js('2022-02-01');
 
 
 CREATE OR REPLACE FUNCTION simple_js_func(A float)
@@ -50,4 +50,5 @@ CREATE OR REPLACE FUNCTION range_to_values(PREFIX VARCHAR, RANGE_START FLOAT, RA
           }
       }
       $$;
+      
 SELECT * FROM TABLE(range_to_values('192.168.1', 42::FLOAT, 45::FLOAT));
