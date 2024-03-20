@@ -18,6 +18,7 @@ def lambda_handler(event, context):
             from_currency = row[1]
             to_currency = row[2]
             
+            # Gets the exchange rate(s) from the currency
             response = http.request('GET','https://open.er-api.com/v6/latest/'+from_currency)
             response_data = response.data.decode('utf8').replace("'", '"')
             data = json.loads(response_data)

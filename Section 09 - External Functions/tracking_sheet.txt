@@ -4,21 +4,18 @@
 
 ---- Step 1: Information about the Lambda Function (remote service) *****
 
-Your AWS Account ID: 
-
-Lambda Function Name: 
+Your AWS Account ID: 965642570530
+Lambda Function Name: lamb-on-dev-gbl-snowflake-aws-001
 
 ------Step 2: Information about the API Gateway (proxy Service) ********
 
-New IAM Role Name: 
-
-New IAM Role ARN: 
+New IAM Role Name: iamr-on-dev-gbl-sflk-aws-external-001
+New IAM Role ARN: arn:aws:iam::965642570530:role/iamr-on-dev-gbl-sflk-aws-external-001
 
 Snowflake VPC ID (optional): N/A
 
-New API Name: 
-
-API Gateway Resource Name: 
+New API Name: apigw-on-dev-gbl-snowflake-currency-001
+API Gateway Resource Name: on-currency-conversion-api-resource
 
 Resource Invocation URL: 
 
