@@ -44,7 +44,7 @@ def lambda_handler(event, context):
 # {
 #     "data":
 #         [
-#             [0,"USD", "INR"]
+#             [0,"USD", "MXN"]
 #         ]
 # }
 

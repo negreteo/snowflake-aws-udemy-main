@@ -5,24 +5,26 @@
 ---- Step 1: Information about the Lambda Function (remote service) *****
 
 Your AWS Account ID: 965642570530
+
 Lambda Function Name: lamb-on-dev-gbl-snowflake-aws-001
 
-------Step 2: Information about the API Gateway (proxy Service) ********
+---- Step 2: Information about the API Gateway (proxy Service) ********
 
 New IAM Role Name: iamr-on-dev-gbl-sflk-aws-external-001
+
 New IAM Role ARN: arn:aws:iam::965642570530:role/iamr-on-dev-gbl-sflk-aws-external-001
 
 Snowflake VPC ID (optional): N/A
 
 New API Name: apigw-on-dev-gbl-snowflake-currency-001
+
 API Gateway Resource Name: on-currency-conversion-api-resource
 
-Resource Invocation URL: 
+Resource Invocation URL: https://agi3xt979i.execute-api.us-east-1.amazonaws.com/production/on-currency-conversion-api-resource
 
-Method Request ARN: 
+Method Request ARN: arn:aws:execute-api:us-east-1:965642570530:agi3xt979i/*/POST/on-currency-conversion-api-resource
 
-
-Resource Policy : 
+Resource Policy Template: 
 
 {
     "Version": "2012-10-17",
@@ -32,7 +34,7 @@ Resource Policy :
         "Effect": "Allow",
         "Principal":
             {
-            "AWS": "arn:aws:sts::<12-digit-number>:assumed-role/<external_function_role>/snowflake"
+            "AWS": "arn:aws:sts::<12-digit-account-number>:assumed-role/<external_function_role>/snowflake"
             },
         "Action": "execute-api:Invoke",
         "Resource": "<method_request_ARN>"
@@ -40,19 +42,13 @@ Resource Policy :
     ]
 }
 
-
-
-
 ---- Step 3: Information about the API Integration and External Function 
-
 
 API Integration Name: 
 
-API_AWS_IAM_USER_ARN: 
+API_AWS_IAM_USER_ARN: arn:aws:iam::339712755047:user/1kqj0000-s
 
-
-API_AWS_EXTERNAL_ID: 
-
+API_AWS_EXTERNAL_ID: DOB17234_SFCRole=2_8Vmx+pUp3k5/ZGyRpLHa0O+tm6I=
 
 IAM TRUST POLICY: 
 
@@ -69,7 +65,6 @@ IAM TRUST POLICY:
     }
   ]
 }
-
 
 External Function Name: 
 
