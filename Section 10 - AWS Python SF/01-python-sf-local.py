@@ -1,9 +1,9 @@
 import snowflake.connector
 
 ctx = snowflake.connector.connect(
-    user="",
-    password="",
-    account="",
+    user="negreteo",
+    password="Udemy@123",
+    account="qdqhjib-njb76303",
     warehouse="compute_wh",
     database="ecommerce_db",
     schema="ECOMMERCE_DEV",
