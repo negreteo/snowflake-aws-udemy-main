@@ -3,9 +3,9 @@ import snowflake.connector
 from awsglue.utils import getResolvedOptions
 
 con = snowflake.connector.connect(
-    user="siddharth",
+    user="negreteo",
     password="Udemy@123",
-    account="az32171.eu-central-1",
+    account="qdqhjib-njb76303",
     warehouse="compute_wh",
     database="ecommerce_db",
     schema="ECOMMERCE_DEV",
@@ -19,7 +19,7 @@ cursor = con.cursor()
 
 sql_query = """
             select * from lineitem limit 100
-            """
+           """
 
 try : 
     cursor.execute(sql_query)
@@ -34,3 +34,5 @@ except Exception as e:
     
 finally:
     con.close() 
+
+    
