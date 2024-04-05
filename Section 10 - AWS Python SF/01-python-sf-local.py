@@ -15,7 +15,7 @@ ctx = snowflake.connector.connect(
 
 cs = ctx.cursor()
 try:
-    sql = """select * from LINEITEM  limit 10"""
+    sql = """select * from LINEITEM limit 10"""
     cs.execute(sql)
     # one_row = cs.fetchone()
     all_rows = cs.fetchall()
@@ -25,3 +25,4 @@ try:
 finally:
     cs.close()
 ctx.close()
+
