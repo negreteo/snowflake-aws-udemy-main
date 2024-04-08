@@ -3,10 +3,10 @@ import sys
 import snowflake.connector
 # from awsglue.utils import getResolvedOptions
 
-conn = snowflake.connector.connect(
-    user="",
-    password="",
-    account="",
+con = snowflake.connector.connect(
+    user="negreteo",
+    password="Udemy@123",
+    account="qdqhjib-njb76303",
     warehouse="compute_wh",
     database="ecommerce_db",
     schema="ECOMMERCE_DEV",
@@ -20,7 +20,7 @@ try:
     sql = """
         select * from lineitem limit 10
     """
-    data_agg = pd.read_sql(sql, conn)
+    data_agg = pd.read_sql(sql, con)
     print(data_agg.head())
 finally:
-    conn.close()
+    con.close()
