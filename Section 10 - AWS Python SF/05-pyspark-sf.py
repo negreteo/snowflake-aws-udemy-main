@@ -12,9 +12,9 @@ snowflake_schema="ECOMMERCE_DEV"
 source_table_name="LINEITEM"
 
 snowflake_options = {
-    "sfUrl":"",
-    "sfUser": "",
-    "sfPassword": "",
+    "sfUrl":"qdqhjib-njb76303.snowflakecomputing.com",
+    "sfUser": "negreteo",
+    "sfPassword": "Udemy@123",
     "sfDatabase": snowflake_database,
     "sfSchema": snowflake_schema,
     "sfWarehouse": "COMPUTE_WH"
