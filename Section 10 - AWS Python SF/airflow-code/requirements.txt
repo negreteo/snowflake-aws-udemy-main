@@ -1,3 +1,2 @@
-cryptography
-snowflake-connector-python==2.5.1
-pandas==1.4.1
+snowflake-connector-python
+apache-airflow-providers-snowflake
